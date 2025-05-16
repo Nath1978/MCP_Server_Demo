@@ -4,6 +4,7 @@ mcp_chatbot.py
 MCP Chatbot client via stdio, fully configured via .env, using logging and robust error handling.
 """
 import os
+import socket
 import asyncio
 import logging
 from typing import List, Dict, Any
@@ -12,6 +13,22 @@ import nest_asyncio
 from anthropic import Anthropic
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+
+# Get local IP address
+
+def get_local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # doesn't need to be reachable
+        s.connect(('10.255.255.255', 1))
+        IP = s.getsockname()[0]
+    except Exception:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
+
+print("Local IP:", get_local_ip())
 
 # Allow nested event loops (useful in notebooks)
 nest_asyncio.apply()
