@@ -4,4 +4,4 @@ __pycache__/
 *.env
 *.sqlite3
 .DS_Store
-*.log
+*.loggit remote remove origin
