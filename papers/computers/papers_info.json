@@ -1,0 +1,11 @@
+{
+  "1310.7911v2": {
+    "title": "Compact manifolds with computable boundaries",
+    "authors": [
+      "Zvonko Iljazovic"
+    ],
+    "summary": "We investigate conditions under which a co-computably enumerable closed set\nin a computable metric space is computable and prove that in each locally\ncomputable computable metric space each co-computably enumerable compact\nmanifold with computable boundary is computable. In fact, we examine the notion\nof a semi-computable compact set and we prove a more general result: in any\ncomputable metric space each semi-computable compact manifold with computable\nboundary is computable. In particular, each semi-computable compact\n(boundaryless) manifold is computable.",
+    "pdf_url": "http://arxiv.org/pdf/1310.7911v2",
+    "published": "2013-10-29"
+  }
+}
