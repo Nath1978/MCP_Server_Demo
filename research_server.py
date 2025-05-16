@@ -128,4 +128,3 @@ def extract_info(paper_id: str) -> Union[Dict, str]:
 if __name__ == "__main__":
     logger.info("Starting MCP Research Server (stdio transport)")
     mcp.run(transport='stdio')
-
