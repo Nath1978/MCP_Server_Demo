@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Prueba MCP SSE</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; }
+    pre  { background: #f4f4f4; padding: .5rem; border-radius: 4px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Prueba MCP SSE</h1>
+  <pre id="log">Conectando…</pre>
+  <script>
+    const logElem = document.getElementById('log');
+    const log = msg => { logElem.textContent += '\n' + msg; };
+
+    const BASE    = 'http://192.168.100.167:8000';
+    // IMPORTANTE: añadimos la barra al final para que coincida con el mount("/sse/", ...)
+    // *sin* barra final, al “stream” interno llamado “sse”
+    const SSE_URL = `${BASE}/`;
+
+    let sessionPath;
+
+    // 1) Abre el canal SSE
+    const source = new EventSource(SSE_URL);
+    source.onopen  = () => log('✅ SSE abierto');
+    source.onerror = () => log(`❌ Error SSE (readyState=${source.readyState})`);
+
+    // 2) Al recibir el endpoint, dispara initialize y luego list
+    source.addEventListener('endpoint', async ev => {
+      sessionPath = ev.data;  // "/messages/?session_id=…"
+      log(`📨 Endpoint: ${sessionPath}`);
+
+      const url = BASE + sessionPath;
+      const headers = {
+        'Content-Type': 'application/json',
+        'Accept':       'application/json, text/event-stream'
+      };
+
+      // 2a) InitializeRequest (id = 0)
+      const initBody = {
+        jsonrpc: "2.0",
+        id:      0,
+        method:  "initialize",
+        params: {
+          protocolVersion: "1.0.0",
+          capabilities:    {},
+          clientInfo:      { name: "mcp_web_client", version: "0.1" }
+        }
+      };
+      await fetch(url, { method: 'POST', headers, body: JSON.stringify(initBody) });
+      log('🆕 initialize enviado');
+
+      // 2b) ListToolsRequest (id = 1)
+      const listBody = {
+        jsonrpc: "2.0",
+        id:      1,
+        method:  "ListToolsRequest",
+        params:  {}
+      };
+      await fetch(url, { method: 'POST', headers, body: JSON.stringify(listBody) });
+      log('🔛 ListToolsRequest enviado');
+    });
+
+    // 3) Maneja las respuestas JSON-RPC que llegan por SSE
+    source.onmessage = ev => {
+      try {
+        const msg = JSON.parse(ev.data);
+        // id 0 -> initialize response
+        if (msg.id === 0) {
+          log(`🔄 initialize respuesta: ${msg.result ? 'OK' : JSON.stringify(msg.error)}`);
+        }
+        // id 1 -> list tools response
+        if (msg.id === 1) {
+          const tools = msg.result?.tools || [];
+          const names = tools.map(t => t.name).join(', ') || '—ninguna—';
+          log(`🔌 Tools: ${names}`);
+        }
+      } catch {
+        // Puede ser ping u otro evento; lo ignoramos
+      }
+    };
+
+    // 4) Opcional: ver los pings keep-alive
+    source.addEventListener('ping', ev => {
+      log(`⏱ ping ${ev.data}`);
+    });
+  </script>
+</body>
+</html>
+

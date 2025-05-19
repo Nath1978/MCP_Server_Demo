@@ -1,17 +1,22 @@
-import socket, json
+# Minimal MCP TCP client for status tool
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+import asyncio
 
-HOST, PORT = "192.168.100.167", 8000
+server_params = StdioServerParameters(
+    command="python",
+    args=["research_server.py"],
+    env=None,
+)
 
-# Build a JSON-RPC “status” request
-request = {
-    "jsonrpc": "2.0",
-    "method": "status",
-    "id": "status"
-}
-payload = (json.dumps(request) + "\n").encode()
+async def run():
+    async with stdio_client(server_params) as (read, write):
+        async with ClientSession(read, write) as session:
+            await session.initialize()
+            tools = await session.list_tools()
+            print(f"Available MCP tools: {tools}")
+            result = await session.call_tool("status", {})
+            print("Server status:", result)
 
-with socket.create_connection((HOST, PORT), timeout=5) as sock:
-    sock.sendall(payload)
-    # Read the response (adjust buffer size if needed)
-    response = sock.recv(4096).decode()
-    print("Server replied:", response)
+if __name__ == "__main__":
+    asyncio.run(run())
